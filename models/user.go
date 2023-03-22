@@ -11,7 +11,7 @@ type User struct {
 
 	Username string
 	Password string
-
+	Profile  Profile
 	UserRole []UserRole
 }
 
@@ -75,7 +75,7 @@ func DeleteUser(db *gorm.DB, user *User, username string) (err error) {
 		tx.Rollback()
 		return tx.Error
 	}
-	if tx.Where("user_id = ? ", user.ID).Delete(&User{}); tx.Error != nil {
+	if tx.Where("user_id = ? ", user.ID).Delete(&Profile{}); tx.Error != nil {
 		tx.Rollback()
 		return tx.Error
 	}
