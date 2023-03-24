@@ -95,12 +95,12 @@ func (repo *UserRepo) GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, profile)
 }
 
-func (repo *UserRepo) ChangeProfile(c *gin.Context) {
+func (repo *UserRepo) ChangePassword(c *gin.Context) {
 	var err error
 	var user models.User
 	var updatedPassword models.NewPassword
 
-	if c.BindJSON(&updatedPassword) != nil {
+	if c.BindJSON(&updatedPassword) == nil {
 
 		// ! check the user ..
 		err = models.GetUserByName(repo.DB, &user, updatedPassword.Username)
@@ -134,5 +134,56 @@ func (repo *UserRepo) ChangeProfile(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "password successfully changed ..."})
 	} else {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "invalid request"})
+	}
+}
+
+func (repo *UserRepo) ChangeProfile(c *gin.Context) {
+	var err error
+	var user models.User
+	var profile models.Profile
+	var updateProfile models.UserProfile
+
+	if c.BindJSON(&updateProfile) == nil {
+		// ! check the user if exist .....
+		err = models.GetUserByName(repo.DB, &user, updateProfile.Username)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "username not found "})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, err)
+			return
+		}
+
+		// ! check the profile with id ....
+
+		err = models.GetProfileByUserID(repo.DB, &profile, uint(user.ID))
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "user profile not found "})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, err)
+			return
+		}
+
+		// ! assigning the fields...
+
+		profile.FullName = updateProfile.FullName
+		profile.Age = updateProfile.Age
+		profile.Country = updateProfile.Country
+		profile.Email = updateProfile.Email
+
+		err = models.UpdateProfile(repo.DB, &profile)
+
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "user profile has be changed successfully"})
+
+	} else {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "invalid request ...."})
+		return
 	}
 }

@@ -8,7 +8,7 @@ type Profile struct {
 	Email    string `json:"email"`
 	Age      int    `json:"age"`
 	Country  string `json:"country"`
-	UserID   uint   `json:"userid"`
+	UserID   uint   `json:"usersid"`
 }
 
 func CreateProfile(db *gorm.DB, profile *Profile) (err error) {
