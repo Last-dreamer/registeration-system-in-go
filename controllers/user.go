@@ -25,7 +25,7 @@ func (repo *UserRepo) Register(c *gin.Context) {
 	var profile models.Profile
 	var reg models.UserRegister
 
-	if c.BindJSON(&reg) != nil {
+	if c.BindJSON(&reg) == nil {
 
 		var existingUser models.User
 		models.GetUserByName(repo.DB, &existingUser, reg.UserName)
@@ -38,6 +38,7 @@ func (repo *UserRepo) Register(c *gin.Context) {
 		user.Username = reg.UserName
 		profile.FullName = reg.FullName
 		profile.Email = reg.Email
+		user.Profile = profile
 
 		encPass, _ := bcrypt.GenerateFromPassword([]byte(reg.Password), 10)
 		user.Password = string(encPass)
@@ -48,10 +49,10 @@ func (repo *UserRepo) Register(c *gin.Context) {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err2})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"message": "successfully create a user ", "data": user})
+		c.JSON(http.StatusOK, gin.H{"message": "successfully create a user ", "data": reg})
 	} else {
 		fmt.Println(user)
-		c.JSON(http.StatusBadRequest, user)
+		c.JSON(http.StatusBadRequest, gin.H{"message": "please in the corent data"})
 	}
 
 }
@@ -186,4 +187,20 @@ func (repo *UserRepo) ChangeProfile(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "invalid request ...."})
 		return
 	}
+}
+
+func (repo *UserRepo) DeleteUser(c *gin.Context) {
+
+	username, _ := c.Params.Get("username")
+
+	err := models.DeleteUser(repo.DB, &models.User{}, username)
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "successfully Deleted ...."})
 }
