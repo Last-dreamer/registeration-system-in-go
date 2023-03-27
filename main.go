@@ -30,6 +30,7 @@ func main() {
 		r1.POST("/reg", userController.Register)
 		r1.GET("/users", userController.GetUsers)
 		r1.GET("/user/:username", userController.GetUser)
+		r1.PUT("/changepassword", userController.ChangePassword)
 
 	}
 
