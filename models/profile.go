@@ -8,7 +8,7 @@ type Profile struct {
 	Email    string `json:"email"`
 	Age      int    `json:"age"`
 	Country  string `json:"country"`
-	UserID   uint   `json:"usersid"`
+	UserID   uint   `json:"userid"`
 }
 
 func CreateProfile(db *gorm.DB, profile *Profile) (err error) {
@@ -41,7 +41,7 @@ func GetProfile(db *gorm.DB, profile *Profile, id string) (err error) {
 
 func GetProfileByUserID(db *gorm.DB, profile *Profile, userId uint) (err error) {
 
-	err = db.Where("userid = ?", userId).First(&profile).Error
+	err = db.Where("user_id = ?", userId).First(&profile).Error
 	if err != nil {
 		return err
 	}

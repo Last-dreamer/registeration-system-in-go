@@ -9,7 +9,7 @@ import (
 type User struct {
 	gorm.Model
 
-	Username string
+	Username string `json:"username"`
 	Password string
 	Profile  Profile
 	UserRole []UserRole

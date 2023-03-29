@@ -3,6 +3,7 @@ package controllers
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"reg/models"
 
@@ -72,22 +73,31 @@ func (repo *UserRepo) GetUser(c *gin.Context) {
 	username, _ := c.Params.Get("username")
 	var user models.User
 
+	log.Println("testing the current user 2", username)
+
 	err := models.GetUserByName(repo.DB, &user, username)
 	if err != nil {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// c.JSON(http.StatusNotFound, gin.H{"messsage": "user not found "})
-			c.AbortWithStatus(http.StatusNotFound)
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "user not found"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err})
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "some error happend"})
 		return
 	}
+
+	log.Println("testing the current user", &user, username)
 
 	var profile models.Profile
 
 	err2 := models.GetProfileByUserID(repo.DB, &profile, uint(user.ID))
 	if err2 != nil {
+
+		if errors.Is(err2, gorm.ErrRecordNotFound) {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"message": "user not found"})
+			return
+		}
 
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err2})
 		return
