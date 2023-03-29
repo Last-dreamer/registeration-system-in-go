@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"reg/auth"
 	"reg/controllers"
 	"reg/database"
 
@@ -25,7 +26,7 @@ func main() {
 
 	userController := controllers.NewUserController(db)
 
-	r1 := r.Group("/api/user")
+	r1 := r.Group("/api")
 	{
 		r1.POST("/reg", userController.Register)
 		r1.GET("/users", userController.GetUsers)
@@ -33,6 +34,12 @@ func main() {
 		r1.PUT("/changepassword", userController.ChangePassword)
 		r1.PUT("/changeprofile", userController.ChangeProfile)
 		r1.DELETE("/delete/:username", userController.DeleteUser)
+	}
+
+	basicAuth := auth.InitBasicAuth(db)
+	r2 := r.Group("/user", basicAuth.BasicAuth())
+	{
+		r2.GET("/profile/:username", userController.GetUser)
 	}
 
 	r.Run()
