@@ -35,11 +35,10 @@ func (repo BasicAuthRepo) BasicAuth() gin.HandlerFunc {
 					return
 				}
 			}
-
 		}
 		c.Abort()
 		c.Writer.Header().Set("WWW-Authenticate", "Basic realm=Restricted")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthurized ....."})
-		return
+
 	}
 }

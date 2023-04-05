@@ -42,6 +42,15 @@ func main() {
 		r2.GET("/profile/:username", userController.GetUser)
 	}
 
+	jwtMiddleware, _ := auth.InitJwt(db)
+
+	r.POST("/login", jwtMiddleware.LoginHandler)
+
+	j := r.Group("/member", jwtMiddleware.MiddlewareFunc())
+	{
+		j.GET("/profile/:username", userController.GetUser)
+	}
+
 	r.Run()
 
 }
