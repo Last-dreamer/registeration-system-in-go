@@ -2,6 +2,7 @@ package auth
 
 import (
 	"log"
+	"net/http"
 	"os"
 	"reg/models"
 	"time"
@@ -81,17 +82,72 @@ func InitJwt(db *gorm.DB) (*jwt.GinJWTMiddleware, error) {
 			},
 
 			LoginResponse: func(c *gin.Context, code int, token string, expire time.Time) {
-				c.JSON(code, gin.H{
-					"access token": token,
-					"expires in ":  expire.Format(time.RFC1123),
-				})
+				// c.JSON(code, gin.H{
+				// 	"access token": token,
+				// 	"expires in ":  expire.Format(time.RFC1123),
+				// })
+				// persistance ....
+				username, _ := c.Get("CURRENT_USERNAME")
+
+				var userToken models.UserToken
+
+				userToken.Token = token
+				userToken.Username = username.(string)
+
+				models.DeleteTokenByUsername(db, &userToken)
+
+				err := models.SetToken(db, &userToken)
+				if err == nil {
+					c.JSON(http.StatusOK, gin.H{
+						"token":     token,
+						"expire in": expire.Format(time.RFC1123),
+					})
+				} else {
+					c.JSON(http.StatusInternalServerError, gin.H{
+						"error": "error while processing jwt token  .....",
+					})
+				}
+
+			},
+
+			LogoutResponse: func(c *gin.Context, code int) {
+				var userToken models.UserToken
+
+				oldToken, _ := c.Get("CURRENT_JWT_TOKEN")
+				userToken.Token = oldToken.(string)
+
+				err := models.DeleteToken(db, &userToken)
+				if err == nil {
+					c.JSON(http.StatusOK, gin.H{"message": "successfully deleted the token ..."})
+				}
+
 			},
 
 			RefreshResponse: func(c *gin.Context, code int, token string, expire time.Time) {
-				c.JSON(code, gin.H{
-					"access token": token,
-					"expires in ":  expire.Format(time.RFC1123),
-				})
+				// c.JSON(code, gin.H{
+				// 	"access token": token,
+				// 	"expires in ":  expire.Format(time.RFC1123),
+				// })
+
+				var userToken models.UserToken
+
+				oldToken, _ := c.Get("CURRENT_JWT_TOKEN")
+
+				userToken.Token = oldToken.(string)
+				models.DeleteToken(db, &userToken)
+
+				userToken.Token = token
+				err := models.SetToken(db, &userToken)
+
+				if err == nil {
+					c.JSON(code, gin.H{
+						"access_token": token,
+						"expires_in":   expire.Format(time.RFC3339),
+					})
+				} else {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": "problem in token processing ./.. "})
+				}
+
 			},
 
 			IdentityHandler: func(c *gin.Context) interface{} {

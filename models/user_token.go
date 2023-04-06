@@ -21,7 +21,6 @@ func SetToken(db *gorm.DB, userToken *UserToken) (err error) {
 			err = db.Create(&userToken).Error
 		}
 	}
-
 	return err
 }
 
@@ -42,12 +41,9 @@ func DeleteToken(db *gorm.DB, userToken *UserToken) (err error) {
 }
 
 func DeleteTokenByUsername(db *gorm.DB, userToken *UserToken) (err error) {
-
 	err = db.Unscoped().Where("username = ?", userToken.Username).Delete(&UserToken{}).Error
-
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil
-
 	}
 	return err
 }

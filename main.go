@@ -37,20 +37,22 @@ func main() {
 	}
 
 	basicAuth := auth.InitBasicAuth(db)
+
 	r2 := r.Group("/user", basicAuth.BasicAuth())
 	{
 		r2.GET("/profile/:username", userController.GetUser)
 	}
 
 	jwtMiddleware, _ := auth.InitJwt(db)
+	authHelper := auth.InitHelper(db)
 
 	r.POST("/login", jwtMiddleware.LoginHandler)
+	r.GET("/logout", authHelper.VerifyToken, jwtMiddleware.LogoutHandler)
 
-	j := r.Group("/member", jwtMiddleware.MiddlewareFunc())
+	j := r.Group("/member", authHelper.VerifyToken, jwtMiddleware.MiddlewareFunc())
 	{
 		j.GET("/profile/:username", userController.GetUser)
 	}
-
 	r.Run()
 
 }

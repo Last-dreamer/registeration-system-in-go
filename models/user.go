@@ -15,9 +15,9 @@ type User struct {
 	UserRole []UserRole
 }
 
-type APIUser struct {
-	Username string
-}
+// type APIUser struct {
+// 	Username string
+// }
 
 func CreateUser(db *gorm.DB, user User) (err error) {
 
