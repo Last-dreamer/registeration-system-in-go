@@ -25,11 +25,13 @@ func main() {
 	db := database.InitDb()
 
 	userController := controllers.NewUserController(db)
+	userRoleController := controllers.InitUserRoleController(db)
 
 	r1 := r.Group("/api")
 	{
 		r1.POST("/reg", userController.Register)
 		r1.GET("/users", userController.GetUsers)
+		r1.GET("/profile/:username", userController.GetUser)
 		r1.GET("/user/:username", userController.GetUser)
 		r1.PUT("/changepassword", userController.ChangePassword)
 		r1.PUT("/changeprofile", userController.ChangeProfile)
@@ -49,10 +51,16 @@ func main() {
 	r.POST("/login", jwtMiddleware.LoginHandler)
 	r.GET("/logout", authHelper.VerifyToken, jwtMiddleware.LogoutHandler)
 
-	j := r.Group("/member", authHelper.VerifyToken, jwtMiddleware.MiddlewareFunc())
+	jwtAuth := r.Group("/member", authHelper.VerifyToken, jwtMiddleware.MiddlewareFunc())
 	{
-		j.GET("/profile/:username", userController.GetUser)
+
+		jwtAuth.GET("/profile/:username", authHelper.CheckRoles([]string{"ADMIN", "USER"}), userController.GetUser)
+		jwtAuth.GET("/users", authHelper.CheckRoles([]string{"ADMIN"}), userController.GetUsers)
 	}
+
+	jwtAuth.POST("/addrole", userRoleController.AddUserRole)
+	jwtAuth.POST("/removerole", userRoleController.DeleteUserRole)
+
 	r.Run()
 
 }

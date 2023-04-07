@@ -5,7 +5,9 @@ import (
 	"reg/models"
 	"strings"
 
+	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
+
 	"gorm.io/gorm"
 )
 
@@ -40,6 +42,35 @@ func (repo *HelperRepo) VerifyToken(c *gin.Context) {
 		return
 	}
 
+}
+
+func (repo *HelperRepo) CheckRoles(roles []string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		payload, _ := c.Get("JWT_PAYLOAD")
+		claims := payload.(jwt.MapClaims)
+
+		var user models.User
+		err := models.GetUserByName(repo.DB, &user, claims["id"].(string))
+
+		if err == nil {
+			var userRole []models.UserRole
+			err := models.GetRoleByUserId(repo.DB, &userRole, user.ID)
+			if err == nil {
+
+				for _, userrole := range userRole {
+					for _, role := range roles {
+						if strings.EqualFold(userrole.Role, role) {
+							c.Next()
+							return
+						}
+					}
+				}
+			}
+		}
+		c.Abort()
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authorized ....."})
+
+	}
 }
 
 func ParseToken(auth string) (token string) {

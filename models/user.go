@@ -40,7 +40,8 @@ func GetUsers(db *gorm.DB, user *[]User) (err error) {
 
 func GetUserByName(db *gorm.DB, user *User, username string) (err error) {
 
-	err = db.Where("username = ?", username).Find(&user).Error
+	// log.Println("user name ", username, ":::", user)
+	err = db.Where("username = ?", username).Find(user).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
